@@ -163,7 +163,7 @@
           },
           "position": {
             "x": -24,
-            "y": 1440
+            "y": 1520
           }
         },
         {
@@ -183,7 +183,7 @@
           },
           "position": {
             "x": -24,
-            "y": 1528
+            "y": 1616
           }
         },
         {
@@ -203,7 +203,7 @@
           },
           "position": {
             "x": -24,
-            "y": 1616
+            "y": 1712
           }
         },
         {
@@ -234,7 +234,7 @@
           },
           "position": {
             "x": -24,
-            "y": 1704
+            "y": 1808
           }
         },
         {
@@ -290,7 +290,7 @@
           },
           "position": {
             "x": -24,
-            "y": 1856
+            "y": 1968
           }
         },
         {
@@ -483,149 +483,6 @@
           }
         },
         {
-          "id": "9c861c1e-96fd-447a-b333-d4029c5b1f2f",
-          "type": "basic.code",
-          "data": {
-            "code": "// Parellel interface\nreg [2:0] rs_latch, rs_out;\nreg [7:0] d_latch, d_out;\nreg dv_latch = 0, dv_latch2, dv;\n\nalways @ (posedge e_clock)\n    dv_latch <= ~(cs | wr); // dv_latch word hoog als cs en wr laag zijn\n    \nalways @ (posedge dv_latch)\nbegin\n    rs_latch <= rs;\n    d_latch <= d;\n    dv_latch2 <= 1; // dv_latch2 word hoog als dv_latch van laag naar hoog gaat\nend\n\nalways @ (posedge i_clock)\nbegin\n    rs_out <= rs_latch;\n    d_out <= d_latch;\n    dv <= dv_latch2;\n    dv_latch2 <= 0; // dv_latch2 word iedere clock pulse gereset    \nend",
-            "params": [],
-            "ports": {
-              "in": [
-                {
-                  "name": "i_clock"
-                },
-                {
-                  "name": "e_clock"
-                },
-                {
-                  "name": "cs"
-                },
-                {
-                  "name": "wr"
-                },
-                {
-                  "name": "rs",
-                  "range": "[2:0]",
-                  "size": 3
-                },
-                {
-                  "name": "d",
-                  "range": "[7:0]",
-                  "size": 8
-                }
-              ],
-              "out": [
-                {
-                  "name": "dv"
-                },
-                {
-                  "name": "rs_out",
-                  "range": "[2:0]",
-                  "size": 3
-                },
-                {
-                  "name": "d_out",
-                  "range": "[7:0]",
-                  "size": 8
-                }
-              ]
-            }
-          },
-          "position": {
-            "x": 496,
-            "y": 1488
-          },
-          "size": {
-            "width": 504,
-            "height": 432
-          }
-        },
-        {
-          "id": "a9e34a0c-8092-4276-a67f-fa6be02feab8",
-          "type": "basic.code",
-          "data": {
-            "code": "// Video RAM & command processor\nreg [15:0] dout;\nreg [7:0] color_latch = 8'h70; // fg = white, bg = black\nreg [15:0] mem[0:2399];\nreg [11:0] waddr = 0;\nreg [9:0] paddr, laddr;\nreg hsync, vsync, visible, dummy;\n\n// @include verilog_memory.list\n\ninitial begin\n    $readmemh(\"verilog_memory.list\", mem);\nend\n\nalways @ (posedge clk)\nbegin\n    dout <= mem[maddr];\n    \n    if (dv && rs == 0)\n        mem[waddr] <= {color_latch, din};\nend\n    \nalways @ (posedge clk)\nif (dv)\nbegin\n    case (rs)\n        0 : if (waddr == 2399)  // Write data and increment\n                waddr <= 0;\n            else\n                waddr <= waddr + 1;\n        1 : color_latch <= din; // Write color_latch\n        5 : if (din == 0)       // commands\n                waddr <= 0;     // 0 = reset waddr\n        default : dummy = 0;    // do nothing\n    endcase\nend\n    \nalways @ (posedge clk)\nbegin\n    paddr <= pa_in;\n    laddr <= la_in;\n    hsync <= hs_in;\n    vsync <= vs_in;\n    visible <= vis_in;\nend",
-            "params": [],
-            "ports": {
-              "in": [
-                {
-                  "name": "clk"
-                },
-                {
-                  "name": "pa_in",
-                  "range": "[9:0]",
-                  "size": 10
-                },
-                {
-                  "name": "la_in",
-                  "range": "[9:0]",
-                  "size": 10
-                },
-                {
-                  "name": "hs_in"
-                },
-                {
-                  "name": "vs_in"
-                },
-                {
-                  "name": "vis_in"
-                },
-                {
-                  "name": "maddr",
-                  "range": "[11:0]",
-                  "size": 12
-                },
-                {
-                  "name": "dv"
-                },
-                {
-                  "name": "rs",
-                  "range": "[2:0]",
-                  "size": 3
-                },
-                {
-                  "name": "din",
-                  "range": "[7:0]",
-                  "size": 8
-                }
-              ],
-              "out": [
-                {
-                  "name": "paddr",
-                  "range": "[9:0]",
-                  "size": 10
-                },
-                {
-                  "name": "laddr",
-                  "range": "[9:0]",
-                  "size": 10
-                },
-                {
-                  "name": "hsync"
-                },
-                {
-                  "name": "vsync"
-                },
-                {
-                  "name": "visible"
-                },
-                {
-                  "name": "dout",
-                  "range": "[15:0]",
-                  "size": 16
-                }
-              ]
-            }
-          },
-          "position": {
-            "x": 1704,
-            "y": 40
-          },
-          "size": {
-            "width": 520,
-            "height": 992
-          }
-        },
-        {
           "id": "dabd5611-f11c-4e65-921a-1571aacd7df2",
           "type": "basic.code",
           "data": {
@@ -687,6 +544,149 @@
           "size": {
             "width": 448,
             "height": 696
+          }
+        },
+        {
+          "id": "a9e34a0c-8092-4276-a67f-fa6be02feab8",
+          "type": "basic.code",
+          "data": {
+            "code": "// Video RAM\nreg [15:0] dout;\nreg [15:0] mem[0:2399];\nreg [9:0] paddr, laddr;\nreg hsync, vsync, visible;\n\n// @include verilog_memory.list\n\ninitial begin\n    $readmemh(\"verilog_memory.list\", mem);\nend\n\nalways @ (posedge clk)\nbegin\n    dout <= mem[maddr];\n    \n    if (we)\n        mem[waddr] <= din;\nend\n    \nalways @ (posedge clk)\nbegin\n    paddr <= pa_in;\n    laddr <= la_in;\n    hsync <= hs_in;\n    vsync <= vs_in;\n    visible <= vis_in;\nend",
+            "params": [],
+            "ports": {
+              "in": [
+                {
+                  "name": "clk"
+                },
+                {
+                  "name": "pa_in",
+                  "range": "[9:0]",
+                  "size": 10
+                },
+                {
+                  "name": "la_in",
+                  "range": "[9:0]",
+                  "size": 10
+                },
+                {
+                  "name": "hs_in"
+                },
+                {
+                  "name": "vs_in"
+                },
+                {
+                  "name": "vis_in"
+                },
+                {
+                  "name": "maddr",
+                  "range": "[11:0]",
+                  "size": 12
+                },
+                {
+                  "name": "we"
+                },
+                {
+                  "name": "waddr",
+                  "range": "[11:0]",
+                  "size": 12
+                },
+                {
+                  "name": "din",
+                  "range": "[15:0]",
+                  "size": 16
+                }
+              ],
+              "out": [
+                {
+                  "name": "paddr",
+                  "range": "[9:0]",
+                  "size": 10
+                },
+                {
+                  "name": "laddr",
+                  "range": "[9:0]",
+                  "size": 10
+                },
+                {
+                  "name": "hsync"
+                },
+                {
+                  "name": "vsync"
+                },
+                {
+                  "name": "visible"
+                },
+                {
+                  "name": "dout",
+                  "range": "[15:0]",
+                  "size": 16
+                }
+              ]
+            }
+          },
+          "position": {
+            "x": 1704,
+            "y": 40
+          },
+          "size": {
+            "width": 520,
+            "height": 992
+          }
+        },
+        {
+          "id": "9c861c1e-96fd-447a-b333-d4029c5b1f2f",
+          "type": "basic.code",
+          "data": {
+            "code": "// Parellel interface\nreg [2:0] rs_latch;\nreg [7:0] d_latch, c_latch = 8'h70;\nreg [11:0] waddr = 0;\nreg [15:0] d_out;\nreg we;\nreg clk2, clk3, clk4;\nreg request, ready = 0;\nreg dummy;\n\nalways @ (posedge e_clock)\nbegin\n    clk4 <= (clk2 ^ clk3) & clk2;\n    clk3 <= clk2;\n    clk2 <= e_clock;\n    request <= !cs & !wr;\n    rs_latch <= rs;\n    d_latch <= d;\nend\n\nalways @ (posedge e_clock)\nbegin\n    if (request & clk4)\n    begin\n        if (!ready)\n        begin\n            case (rs)\n                0 : begin // Write character data to vram\n                    d_out <= {c_latch, d_latch};    // color & data\n                    we <= 1;                        // Set we high\n                    if (waddr == 2399)              // adjust waddr\n                        waddr <= 0;\n                    else\n                        waddr <= waddr + 1;\n                end\n                1 : begin // write color to c_latch\n                    c_latch <= d_latch;\n                end\n                4 : begin // reset waddr\n                    waddr <= 0;\n                end\n                default :\n                    dummy <= 0;\n            endcase\n            ready <= 1;\n        end\n    end\n    \n    if (!request & clk4)\n        ready <= 0;\n        \n    if (we)\n        we <= 0;\nend",
+            "params": [],
+            "ports": {
+              "in": [
+                {
+                  "name": "i_clock"
+                },
+                {
+                  "name": "e_clock"
+                },
+                {
+                  "name": "cs"
+                },
+                {
+                  "name": "wr"
+                },
+                {
+                  "name": "rs",
+                  "range": "[2:0]",
+                  "size": 3
+                },
+                {
+                  "name": "d",
+                  "range": "[7:0]",
+                  "size": 8
+                }
+              ],
+              "out": [
+                {
+                  "name": "we"
+                },
+                {
+                  "name": "waddr",
+                  "range": "[11:0]",
+                  "size": 12
+                },
+                {
+                  "name": "d_out",
+                  "range": "[15:0]",
+                  "size": 16
+                }
+              ]
+            }
+          },
+          "position": {
+            "x": 496,
+            "y": 1400
+          },
+          "size": {
+            "width": 640,
+            "height": 592
           }
         }
       ],
@@ -1026,12 +1026,7 @@
             "block": "9c861c1e-96fd-447a-b333-d4029c5b1f2f",
             "port": "e_clock"
           },
-          "vertices": [
-            {
-              "x": 376,
-              "y": 1544
-            }
-          ]
+          "vertices": []
         },
         {
           "source": {
@@ -1042,28 +1037,7 @@
             "block": "9c861c1e-96fd-447a-b333-d4029c5b1f2f",
             "port": "cs"
           },
-          "vertices": [
-            {
-              "x": 360,
-              "y": 1616
-            }
-          ]
-        },
-        {
-          "source": {
-            "block": "bde8f2de-8ab1-4430-8af9-e4b825c6f6c1",
-            "port": "out"
-          },
-          "target": {
-            "block": "9c861c1e-96fd-447a-b333-d4029c5b1f2f",
-            "port": "wr"
-          },
-          "vertices": [
-            {
-              "x": 344,
-              "y": 1688
-            }
-          ]
+          "vertices": []
         },
         {
           "source": {
@@ -1089,20 +1063,57 @@
         },
         {
           "source": {
+            "block": "a9e34a0c-8092-4276-a67f-fa6be02feab8",
+            "port": "dout"
+          },
+          "target": {
+            "block": "dabd5611-f11c-4e65-921a-1571aacd7df2",
+            "port": "d_in"
+          },
+          "size": 16
+        },
+        {
+          "source": {
+            "block": "bde8f2de-8ab1-4430-8af9-e4b825c6f6c1",
+            "port": "out"
+          },
+          "target": {
             "block": "9c861c1e-96fd-447a-b333-d4029c5b1f2f",
-            "port": "rs_out"
+            "port": "wr"
+          }
+        },
+        {
+          "source": {
+            "block": "9c861c1e-96fd-447a-b333-d4029c5b1f2f",
+            "port": "we"
           },
           "target": {
             "block": "a9e34a0c-8092-4276-a67f-fa6be02feab8",
-            "port": "rs"
+            "port": "we"
           },
           "vertices": [
             {
-              "x": 1400,
-              "y": 1592
+              "x": 1560,
+              "y": 1192
+            }
+          ]
+        },
+        {
+          "source": {
+            "block": "9c861c1e-96fd-447a-b333-d4029c5b1f2f",
+            "port": "waddr"
+          },
+          "target": {
+            "block": "a9e34a0c-8092-4276-a67f-fa6be02feab8",
+            "port": "waddr"
+          },
+          "vertices": [
+            {
+              "x": 1592,
+              "y": 1168
             }
           ],
-          "size": 3
+          "size": 12
         },
         {
           "source": {
@@ -1115,37 +1126,10 @@
           },
           "vertices": [
             {
-              "x": 1480,
-              "y": 1672
+              "x": 1624,
+              "y": 1200
             }
           ],
-          "size": 8
-        },
-        {
-          "source": {
-            "block": "9c861c1e-96fd-447a-b333-d4029c5b1f2f",
-            "port": "dv"
-          },
-          "target": {
-            "block": "a9e34a0c-8092-4276-a67f-fa6be02feab8",
-            "port": "dv"
-          },
-          "vertices": [
-            {
-              "x": 1584,
-              "y": 1128
-            }
-          ]
-        },
-        {
-          "source": {
-            "block": "a9e34a0c-8092-4276-a67f-fa6be02feab8",
-            "port": "dout"
-          },
-          "target": {
-            "block": "dabd5611-f11c-4e65-921a-1571aacd7df2",
-            "port": "d_in"
-          },
           "size": 16
         }
       ]
